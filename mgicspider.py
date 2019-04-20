@@ -1,5 +1,19 @@
 import requests 
 from bs4 import BeautifulSoup
+import threading
+
+def get_details(cards):
+    for card in cards:
+        price = card.find("div",attrs ={"class":"m-srp-card__price"}) 
+        title = card.find("a",attrs = {"class":"m-srp-card__title"})
+        title_text = title.text.replace("\n"," ")
+        area = card.find("div",attrs = {"class":"m-srp-card__summary__info"})
+        if area:
+            area_text = area.text
+        else:
+            area_text = None
+        print("{} {} {}".format(title_text,area_text,price.text))
+
 
 def generate_data(page_no):
     data = {
@@ -15,20 +29,13 @@ def generate_data(page_no):
     }
     return data
     
-for index in range(1,11):
+for index in range(1,5):
     print("**************Page {} *********".format(index))
     data = generate_data(index)
     response = requests.post("https://www.magicbricks.com/property-for-sale/residential-real-estate?proptype=Multistorey-Apartment,Builder-Floor-Apartment,Penthouse,Studio-Apartment&cityName=Bangalore",data = data)
     soup = BeautifulSoup(response.content,"html.parser")
     
     cards = soup.find_all("div",attrs ={"class":"m-srp-card__container"})
-    for card in cards:
-        price = card.find("div",attrs ={"class":"m-srp-card__price"}) 
-        title = card.find("a",attrs = {"class":"m-srp-card__title"})
-        title_text = title.text.replace("\n"," ")
-        area = card.find("div",attrs = {"class":"m-srp-card__summary__info"})
-        if area:
-        	area_text = area.text
-        else:
-        	area_text = None
-        print("{} {} {}".format(title_text,area_text,price.text))
+    t = threading.Thread(target=get_details,args = (cards,))
+    t.start()
+    # get_details(cards)
